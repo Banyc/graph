@@ -1,0 +1,10 @@
+[package]
+name = "graph"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+slotmap = "1"
+
+[dev-dependencies]
+bumpalo = { version = "3", features = ["collections"] }
