@@ -54,15 +54,16 @@ pub struct VisitParams<'a, T> {
     pub node: NodeIdx,
 }
 #[derive(Debug, Clone)]
-pub struct VisitResult {
-    pub reschedule: bool,
-    pub visit_children: bool,
+pub enum NextMove {
+    Reschedule,
+    Noop,
+    VisitChildren,
 }
 
 pub fn breath_first_search<T: Node>(
     graph: &mut Graph<T>,
     start: NodeIdx,
-    visit: &mut impl FnMut(VisitParams<'_, T>) -> VisitResult,
+    visit: &mut impl FnMut(VisitParams<'_, T>) -> NextMove,
 ) {
     let mut in_queue = SecondaryMap::new();
     let mut queue = VecDeque::new();
@@ -71,13 +72,15 @@ pub fn breath_first_search<T: Node>(
     while let Some(node) = queue.pop_front() {
         in_queue.remove(node);
         let params = VisitParams { graph, node };
-        let res = visit(params);
-        if res.reschedule {
-            queue.push_back(node);
-            in_queue.insert(node, ());
-        }
-        if !res.visit_children {
-            continue;
+        let next_move = visit(params);
+        match next_move {
+            NextMove::Reschedule => {
+                queue.push_back(node);
+                in_queue.insert(node, ());
+                continue;
+            }
+            NextMove::Noop => continue,
+            NextMove::VisitChildren => (),
         }
         for &child in graph.nodes().get(node).unwrap().children() {
             if in_queue.contains_key(child) {
@@ -120,10 +123,7 @@ mod tests {
 
         let mut visit = |params: VisitParams<'_, NodeA>| {
             let _children = params.graph.nodes().get(params.node).unwrap();
-            VisitResult {
-                reschedule: false,
-                visit_children: true,
-            }
+            NextMove::VisitChildren
         };
         breath_first_search(&mut graph, node, &mut visit);
     }
