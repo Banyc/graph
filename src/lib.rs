@@ -1,7 +1,11 @@
 use std::collections::VecDeque;
 
-pub use slotmap::SlotMap;
-use slotmap::{new_key_type, SecondaryMap};
+use slotmap::{new_key_type, SecondaryMap, SlotMap};
+
+pub type NodeArray<T> = SlotMap<NodeIdx, T>;
+pub fn new_node_array<T>() -> NodeArray<T> {
+    SlotMap::with_key()
+}
 
 new_key_type! {
     pub struct NodeIdx;
@@ -9,17 +13,17 @@ new_key_type! {
 
 #[derive(Debug, Clone)]
 pub struct Graph<T> {
-    nodes: SlotMap<NodeIdx, T>,
+    nodes: NodeArray<T>,
 }
 impl<T> Graph<T> {
-    pub fn new(nodes: SlotMap<NodeIdx, T>) -> Self {
+    pub fn new(nodes: NodeArray<T>) -> Self {
         Self { nodes }
     }
 
-    pub fn nodes(&self) -> &SlotMap<NodeIdx, T> {
+    pub fn nodes(&self) -> &NodeArray<T> {
         &self.nodes
     }
-    pub fn nodes_mut(&mut self) -> &mut SlotMap<NodeIdx, T> {
+    pub fn nodes_mut(&mut self) -> &mut NodeArray<T> {
         &mut self.nodes
     }
 }
@@ -112,7 +116,7 @@ mod tests {
     #[test]
     fn test_bfs() {
         let arena = Bump::new();
-        let mut nodes = SlotMap::with_key();
+        let mut nodes = new_node_array();
         let node = NodeA {
             children: bumpalo::vec![in &arena;],
         };
