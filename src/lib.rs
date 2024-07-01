@@ -3,9 +3,6 @@ use std::collections::VecDeque;
 use slotmap::{new_key_type, SecondaryMap, SlotMap};
 
 pub type NodeArray<T> = SlotMap<NodeIdx, T>;
-pub fn new_node_array<T>() -> NodeArray<T> {
-    SlotMap::with_key()
-}
 
 new_key_type! {
     pub struct NodeIdx;
@@ -35,11 +32,13 @@ pub trait Node {
 /// Return the visited nodes in pre-order
 ///
 /// Each node is visited at most once
-pub fn depth_first_search<T: Node>(graph: &Graph<T>, start: NodeIdx) -> Vec<NodeIdx> {
+pub fn depth_first_search<T: Node>(graph: &Graph<T>, starts: &[NodeIdx]) -> Vec<NodeIdx> {
     let mut met = SecondaryMap::new();
     let mut stack = vec![];
-    stack.push(start);
-    met.insert(start, ());
+    for &start in starts {
+        stack.push(start);
+        met.insert(start, ());
+    }
     let mut visit = vec![];
     while let Some(node) = stack.pop() {
         visit.push(node);
@@ -116,7 +115,7 @@ mod tests {
     #[test]
     fn test_bfs() {
         let arena = Bump::new();
-        let mut nodes = new_node_array();
+        let mut nodes = NodeArray::with_key();
         let node = NodeA {
             children: bumpalo::vec![in &arena;],
         };
