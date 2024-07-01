@@ -86,6 +86,7 @@ pub fn dependency_order<T: Node>(graph: &Graph<T>, starts: &[NodeIdx]) -> Vec<No
             visited.insert(child, ());
         }
     }
+    visit.reverse();
     visit
 }
 
