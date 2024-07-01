@@ -62,7 +62,7 @@ pub struct VisitParams<'a, T> {
 #[derive(Debug, Clone)]
 pub enum NextMove {
     Postpone,
-    Noop,
+    TerminateBranch,
     VisitChildren,
 }
 
@@ -85,7 +85,7 @@ pub fn breath_first_search<T: Node>(
                 in_queue.insert(node, ());
                 continue;
             }
-            NextMove::Noop => continue,
+            NextMove::TerminateBranch => continue,
             NextMove::VisitChildren => (),
         }
         for &child in graph.nodes().get(node).unwrap().children() {
