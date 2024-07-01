@@ -28,21 +28,22 @@ pub trait Node {
 }
 
 /// Return the visited nodes in pre-order
+///
+/// Each node is visited at most once
 pub fn depth_first_search<T: Node>(graph: &Graph<T>, start: NodeIdx) -> Vec<NodeIdx> {
-    let mut in_stack = SecondaryMap::new();
+    let mut met = SecondaryMap::new();
     let mut stack = vec![];
     stack.push(start);
-    in_stack.insert(start, ());
+    met.insert(start, ());
     let mut visit = vec![];
     while let Some(node) = stack.pop() {
-        in_stack.remove(node);
         visit.push(node);
         for &child in graph.nodes().get(node).unwrap().children() {
-            if in_stack.contains_key(child) {
+            if met.contains_key(child) {
                 continue;
             }
             stack.push(child);
-            in_stack.insert(child, ());
+            met.insert(child, ());
         }
     }
     visit
@@ -55,7 +56,7 @@ pub struct VisitParams<'a, T> {
 }
 #[derive(Debug, Clone)]
 pub enum NextMove {
-    Reschedule,
+    Postpone,
     Noop,
     VisitChildren,
 }
@@ -74,7 +75,7 @@ pub fn breath_first_search<T: Node>(
         let params = VisitParams { graph, node };
         let next_move = visit(params);
         match next_move {
-            NextMove::Reschedule => {
+            NextMove::Postpone => {
                 queue.push_back(node);
                 in_queue.insert(node, ());
                 continue;
