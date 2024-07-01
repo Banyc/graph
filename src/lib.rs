@@ -31,26 +31,42 @@ pub trait Node {
 
 /// Return the visited nodes in pre-order
 ///
-/// Each node is visited at most once
+/// A node can be visited more than once
 pub fn depth_first_search<T: Node>(graph: &Graph<T>, starts: &[NodeIdx]) -> Vec<NodeIdx> {
-    let mut met = SecondaryMap::new();
+    let mut in_stack = SecondaryMap::new();
     let mut stack = vec![];
     for &start in starts {
         stack.push(start);
-        met.insert(start, ());
+        in_stack.insert(start, ());
     }
     let mut visit = vec![];
     while let Some(node) = stack.pop() {
+        in_stack.remove(node);
         visit.push(node);
         for &child in graph.nodes().get(node).unwrap().children() {
-            if met.contains_key(child) {
+            if in_stack.contains_key(child) {
                 continue;
             }
             stack.push(child);
-            met.insert(child, ());
+            in_stack.insert(child, ());
         }
     }
     visit
+}
+
+/// A node can be visited at most once
+pub fn dependency_order<T: Node>(graph: &Graph<T>, starts: &[NodeIdx]) -> Vec<NodeIdx> {
+    let dfs = depth_first_search(graph, starts);
+    let mut dep_order = vec![];
+    let mut visited = SecondaryMap::new();
+    for &node in dfs.iter().rev() {
+        if visited.contains_key(node) {
+            continue;
+        }
+        dep_order.push(node);
+        visited.insert(node, ());
+    }
+    dep_order
 }
 
 #[derive(Debug)]
@@ -99,6 +115,8 @@ pub fn breath_first_search<T: Node>(
 
 #[cfg(test)]
 mod tests {
+    use std::{cell::RefCell, collections::HashMap};
+
     use super::*;
 
     use bumpalo::{collections::Vec as BumpVec, Bump};
@@ -131,5 +149,14 @@ mod tests {
             NextMove::VisitChildren
         };
         breath_first_search(&mut graph, node, &mut visit);
+    }
+
+    #[test]
+    fn test_ref_cell() {
+        let arena = Bump::new();
+        let mut param_map: HashMap<String, RefCell<BumpVec<'_, f64>>> = HashMap::new();
+        let params = bumpalo::vec![in &arena; 0., 1., -1.];
+        let params = RefCell::new(params);
+        param_map.insert("a".into(), params);
     }
 }
