@@ -93,6 +93,7 @@ pub fn dependency_order<T: Node>(graph: &Graph<T>, starts: &[NodeIdx]) -> Vec<No
                 continue;
             };
             *pending_children.get_mut(parent).unwrap() -= 1;
+            continue;
         }
         stack.push(edge);
         for &child in graph.nodes().get(node).unwrap().children() {
