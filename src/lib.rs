@@ -68,17 +68,25 @@ pub fn depth_first_search<T: Node>(graph: &Graph<T>, starts: &[NodeIdx]) -> Vec<
 
 /// A node can be visited at most once
 pub fn dependency_order<T: Node>(graph: &Graph<T>, starts: &[NodeIdx]) -> Vec<NodeIdx> {
-    let dfs = depth_first_search(graph, starts);
-    let mut dep_order = vec![];
     let mut visited = SecondaryMap::new();
-    for &node in dfs.iter().rev() {
-        if visited.contains_key(node) {
-            continue;
-        }
-        dep_order.push(node);
-        visited.insert(node, ());
+    let mut stack = vec![];
+    let mut visit = vec![];
+    for &start in starts {
+        stack.push(start);
+        visit.push(start);
+        visited.insert(start, ());
     }
-    dep_order
+    while let Some(node) = stack.pop() {
+        for &child in graph.nodes().get(node).unwrap().children() {
+            if visited.contains_key(child) {
+                continue;
+            }
+            stack.push(child);
+            visit.push(child);
+            visited.insert(child, ());
+        }
+    }
+    visit
 }
 
 #[derive(Debug)]
