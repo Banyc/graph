@@ -1,6 +1,7 @@
 use std::collections::VecDeque;
 
-use slotmap::{new_key_type, SecondaryMap, SlotMap};
+pub use slotmap::SlotMap;
+use slotmap::{new_key_type, SecondaryMap};
 
 new_key_type! {
     pub struct NodeIdx;
