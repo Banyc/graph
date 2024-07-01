@@ -68,25 +68,45 @@ pub fn depth_first_search<T: Node>(graph: &Graph<T>, starts: &[NodeIdx]) -> Vec<
 
 /// A node can be visited at most once
 pub fn dependency_order<T: Node>(graph: &Graph<T>, starts: &[NodeIdx]) -> Vec<NodeIdx> {
-    let mut visited = SecondaryMap::new();
+    #[derive(Debug, Clone, Copy)]
+    struct Edge {
+        pub parent: Option<NodeIdx>,
+        pub child: NodeIdx,
+    }
+    let mut pending_children = SecondaryMap::new();
     let mut stack = vec![];
     let mut visit = vec![];
     for &start in starts {
-        stack.push(start);
-        visit.push(start);
-        visited.insert(start, ());
+        stack.push(Edge {
+            parent: None,
+            child: start,
+        });
     }
-    while let Some(node) = stack.pop() {
+    while let Some(edge) = stack.pop() {
+        let node = edge.child;
+        if !pending_children.contains_key(node) {
+            pending_children.insert(node, graph.nodes().get(node).unwrap().children().len());
+        }
+        if *pending_children.get(node).unwrap() == 0 {
+            visit.push(node);
+            let Some(parent) = edge.parent else {
+                continue;
+            };
+            *pending_children.get_mut(parent).unwrap() -= 1;
+        }
+        stack.push(edge);
         for &child in graph.nodes().get(node).unwrap().children() {
-            if visited.contains_key(child) {
+            if pending_children.contains_key(child) {
+                assert_eq!(*pending_children.get(child).unwrap(), 0);
+                *pending_children.get_mut(node).unwrap() -= 1;
                 continue;
             }
-            stack.push(child);
-            visit.push(child);
-            visited.insert(child, ());
+            stack.push(Edge {
+                parent: Some(node),
+                child,
+            });
         }
     }
-    visit.reverse();
     visit
 }
 
