@@ -34,7 +34,7 @@ pub fn to_dot<T: Node>(graph: &Graph<T>) -> String {
     dot.push_str("digraph {\n");
     for (i, node) in graph.nodes() {
         for &child in node.children() {
-            dot.push_str(&format!("{i:?} -> {child:?}\n"));
+            dot.push_str(&format!("\"{i:?}\" -> \"{child:?}\"\n"));
         }
     }
     dot.push('}');
