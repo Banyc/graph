@@ -74,6 +74,7 @@ pub fn dependency_order<T: Node>(graph: &Graph<T>, starts: &[NodeIdx]) -> Vec<No
         pub child: NodeIdx,
     }
     let mut pending_children = SecondaryMap::new();
+    let mut visited = SecondaryMap::new();
     let mut stack = vec![];
     let mut visit = vec![];
     for &start in starts {
@@ -88,7 +89,10 @@ pub fn dependency_order<T: Node>(graph: &Graph<T>, starts: &[NodeIdx]) -> Vec<No
             pending_children.insert(node, graph.nodes().get(node).unwrap().children().len());
         }
         if *pending_children.get(node).unwrap() == 0 {
-            visit.push(node);
+            if !visited.contains_key(node) {
+                visit.push(node);
+                visited.insert(node, ());
+            }
             let Some(parent) = edge.parent else {
                 continue;
             };
